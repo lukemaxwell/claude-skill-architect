@@ -136,6 +136,16 @@ After Q1–Q5, ask **only the probes warranted by the answers.** Each probe is o
 > C. Phase-based (Intake → Diagnosis → Action style)
 > ```
 
+**Probe D-followup — Mode inference signals** *(fire only if Probe D ≠ A).*
+> Mode inference is automatic — the skill self-orients from input, never asks the user which mode to use. What signals tell the skill which mode applies?
+> ```
+> A. Keywords or phrases in the user's request
+> B. The shape of the input (text vs file vs URL vs paste)
+> C. The user's stated goal / intent
+> D. Stage signals (early vs late, draft vs final, before vs after)
+> E. Multiple — describe one line
+> ```
+
 **Probe E — Setup/config** *(fire if Q3 implies external systems, auth, or per-user state).*
 > What setup or config does this skill need?
 > ```
@@ -153,6 +163,33 @@ After Q1–Q5, ask **only the probes warranted by the answers.** Each probe is o
 > C. When the request violates the skill's stated voice or optimise targets
 > D. When information is missing and the skill should ask before guessing
 > E. Other → describe
+> ```
+
+**Probe G — AI-slop defaults to refuse** *(always fire — short, multi-select).*
+> What would AI typically default to that you DON'T want this skill to do? Pick any that apply:
+> ```
+> A. Generic templates / "standard advice" instead of specific judgement
+> B. Hedging language ("you might consider...", "it depends...")
+> C. Long, comprehensive responses when terse is sharper
+> D. Sycophantic acknowledgements ("Great question!")
+> E. Default fonts / colors / generic visual language (for design-output skills)
+> F. Option-menus when one strong recommendation is the right move
+> G. Other → describe one line
+> ```
+
+**Probe H — Response contract** *(fire if Q4 = A (structured doc) or D (multi-modal artefact)).*
+> Every output should have a named shape. List 2–4 things every output **must** include — one short line each. (Optional: 1–3 things included **only when relevant**.)
+
+**Probe I — Reasoning discipline** *(fire if Q4 = A (structured doc) OR Q1 implies the skill makes recommendations, judgements, or decisions).*
+> When the skill makes a recommendation or recommendation-like output, what MUST accompany each one? Pick all that apply:
+> ```
+> A. Rationale — "why this"
+> B. Risk — "what could go wrong"
+> C. Measure — "how we know it worked"
+> D. Trade-off — "what was rejected and why"
+> E. Confidence level
+> F. Other → describe one line
+> G. None — outputs are descriptive, not recommendation-driven
 > ```
 
 If after core + applicable probes any Build-scope section would still be empty, ask **one more targeted probe.** Don't pad — only ask for what you actually need.
@@ -224,12 +261,44 @@ Write to `<skill-slug>-spec.md` using this exact structure:
 [2–4 specific things this skill goes after, derived from Q1, Q2, Q5]
 
 ## Anti-optimise (DO / DON'T pairs)
+**General:**
 [2–5 specific failure modes with the corrective default — DON'T do X / DO do Y instead]
+
+**AI-slop defaults to refuse** *(from Probe G):*
+[Each default the user picked, framed as DON'T / DO with the corrective behavior]
+
+## Response contract *(if Probe H fired)*
+**Always include in every output:**
+- [item 1 from Probe H]
+- [item 2]
+- [item 3]
+
+**Include when relevant:**
+- [item 1, with the trigger that makes it relevant]
+- [item 2]
+
+## Reasoning discipline *(if Probe I fired and answer ≠ G)*
+For each [recommendation / decision / output unit], the skill must state:
+- [item 1 — e.g. rationale / why this]
+- [item 2 — e.g. risk / what could go wrong]
+- [item 3 — e.g. measure / how we know it worked]
+
+This propagates the skill's structure to the output's structure. Downstream consumers (the next agent, the catalogue, the operator) can rely on the shape.
+
+## Mode inference *(if Probe D ≠ A)*
+- **Modes:** [from Probe D]
+- **Inference signals:** [from Probe D-followup — what input shape, keywords, or context picks each mode]
+- **Anti-pattern:** the skill never asks the user which mode to use. It self-orients from input.
 
 ## Architecture
 - **Structure:** [single-file SKILL.md vs multi-component, with rationale]
-- **Modes:** [from Probe D — none, list, or phase-based]
-- **References:** [from Probe B — one line per reference, with when-to-load guidance]
+- **Progressive disclosure layers:**
+  - **Level 1 — Metadata** (`name` + `description`, ~100 tokens). Always in Claude's system prompt; this is all Claude sees at skill-selection time.
+  - **Level 2 — SKILL.md body.** The orchestrator. Target: under 500 lines, ideally ~200–300. Loaded when the skill triggers.
+  - **Level 3 — References and scripts.** Loaded only when the SKILL.md body's logic says to. Can be many files; consume zero tokens until read.
+  - **Disposition rule:** if a piece of information is *used every invocation*, it belongs in the body (Level 2). If it's *conditionally needed*, it belongs in references (Level 3) with explicit retrieval guidance. **Common failure mode:** dumping Level-3 content (large schemas, case libraries, long rule lists) into Level 2.
+- **Modes:** [from Probe D — single, list, or phase-based]
+- **References:** [from Probe B — one line per reference, with explicit when-to-load guidance]
 - **Scripts/utilities:** [from Probe C — one line per script, with I/O contract]
 
 ## Build scope (for the agent building this skill)
@@ -288,11 +357,14 @@ After writing, tell the user the path and **do not auto-commit**. The user revie
 
 ---
 
-**Version:** v0.1 — initial release. Apr 2026.
+**Version:** v0.1.1 — eight-move coverage patch. Apr 2026.
+- v0.1.1 — added Probe G (AI-slop defaults), D-followup (mode inference signals), Probe H (response contract), Probe I (reasoning discipline). Spec output now carries explicit Response contract, Reasoning discipline, Mode inference, and progressive disclosure (level 1/2/3) sections. Closes the gaps against PATTERN.md's eight moves.
+- v0.1 — initial release.
 
 **Known limitations:**
 
-- Single-mode: no audit or improve flow yet (those are different skills).
+- Single-mode skill itself: no audit or improve flow yet (those are different skills).
 - Spec output is markdown only — no JSON schema export yet.
 - The 10x feedback round's quality depends on how specifically the architect can derive proposals from the captured spec; if the user gives sparse answers, the proposals get harder to keep specific.
 - No automatic validation that the build agent actually addressed every Build-scope section.
+- Probes G–I add ~3 turns for fully-loaded skills. For simple skills (e.g. plain prompt-driven, single-mode, no recommendations), only Probe G fires so the cost is one extra turn.
