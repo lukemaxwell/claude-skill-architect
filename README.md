@@ -1,37 +1,32 @@
 # claude-skill-architect
 
-A starter Claude Code skill that **interviews you** through the right questions and produces a clean **skill-spec markdown file** — which Claude can then use to build the actual skill.
+> ⚠️ **This repo has moved.** Active development continues in the [Fragment256/claude-skills](https://github.com/Fragment256/claude-skills) marketplace.
 
-> **Status:** v0.1.
+`claude-skill-architect` is now a plugin inside Fragment256's curated `claude-skills` marketplace — same skill, same name, just hosted alongside other public Fragment256 skills.
 
-## Why
+## Install (new home)
 
-Most skills get written one-shot, from a vague idea, in a single editor pass. They come out shallower than they could. The fix is upstream: elicit a structured spec *before* generating the skill.
-
-`claude-skill-architect` runs the elicitation as a short conversation — five core questions plus targeted multiple-choice probes — and produces a comprehensive spec that scopes not just *what the skill does* but the **build agent's full job**: research to perform, knowledge to codify into a reference layer, helper scripts/utilities to build, validation to run, setup and config required, and usability concerns to address.
-
-It also provides 10x feedback — the architect proposes specific enhancements derived from your answers, you choose what's v1 vs parked vs declined. The user contributes intent; the architect contributes vision.
-
-## Install
-
-```bash
-git clone git@github.com:lukemaxwell/claude-skill-architect.git ~/claude-skill-architect
-ln -s ~/claude-skill-architect ~/.claude/skills/claude-skill-architect
+```
+/plugin marketplace add Fragment256/claude-skills
+/plugin install claude-skill-architect@claude-skills
 ```
 
-The skill will auto-load in any Claude Code session.
+## What it does
 
-## Usage
+Interview-driven skill spec elicitation. Walks you through 5 core questions plus adaptive probes (mostly multiple choice), then produces a deterministic spec the build agent uses to ship a sharp `SKILL.md` — research, reference layer, tools, validation, setup, and usability all scoped.
 
-Trigger the skill with any of:
+Use it **before** writing any `SKILL.md`.
 
-- `start a new skill`
-- `architect a skill for X`
-- `interview me to build a skill`
-- `/claude-skill-architect`
+## Read more
 
-The skill walks you through the spec questions one at a time, then writes `<your-skill-slug>-spec.md` you can hand to Claude.
+- New marketplace: <https://github.com/Fragment256/claude-skills>
+- Skill source: <https://github.com/Fragment256/claude-skills/tree/main/claude-skill-architect/.claude/skills/claude-skill-architect>
+- Authored by [Fragment256](https://fragment256.com)
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT.
+
+---
+
+*This repo will be archived shortly. All future commits land in [Fragment256/claude-skills](https://github.com/Fragment256/claude-skills).*
